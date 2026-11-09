@@ -1,0 +1,11 @@
+# Logs
+*.log
+nvim.log
+
+# Secretos
+**/service.json
+
+# Sistema / editor
+.DS_Store
+*.swp
+*~

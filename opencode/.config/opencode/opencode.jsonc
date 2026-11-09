@@ -1,0 +1,63 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Modelo diario (build): DeepSeek V4.1 Flash 1017 vía OpenRouter (caché ~$0.003-0.006/M)
+  "model": "openrouter/deepseek/deepseek-v4.1-flash-1017",
+  "default_agent": "build",
+  "update": "notify",
+  "share": "disabled",
+  "providers": {
+    "openrouter": {
+      // Campos JSON que se fusionan en cada petición a OpenRouter
+      "body": {
+        "provider": { "zdr": true, "data_collection": "deny" }
+      },
+      // Fijación de proveedor por modelo (se fusiona con el body del proveedor)
+      "models": {
+        "deepseek/deepseek-v4.1-flash-1017": {
+          "body": {
+            "provider": {
+              // Fuera de China, ZDR, sin entrenamiento, con caché y tools (precios OpenRouter 31-oct-2026, $/M in/caché/out):
+              // deepinfra/fp8 0.098/0.00294/0.294 · cloudflare 0.10/0.003/0.60 · together 0.30/0.006/1.20 · nebius/fp8 0.30/0.006/1.20
+              // Sin "fireworks": su slug base también casa con fireworks/us (1.5x) y fireworks/spot (degradado)
+              "order": ["deepinfra/fp8", "cloudflare", "together", "nebius/fp8"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "moonshotai/kimi-k3.1-pro": {
+          "body": {
+            // Único proveedor: Moonshot AI (Singapur, ZDR). Se fija el endpoint estándar, no "highspeed" ($4/$20)
+            "provider": { "order": ["moonshotai/mxfp4"], "allow_fallbacks": false }
+          }
+        }
+      }
+    }
+  },
+  "permissions": [
+    // Modo "auto": todo permitido sin preguntar (es la base de OpenCode v2)
+    { "action": "*", "resource": "*", "effect": "allow" },
+    // Bloqueos duros: nunca suben ni publican nada
+    { "action": "shell", "resource": "git push *", "effect": "ask" },
+    { "action": "shell", "resource": "git commit *", "effect": "ask" },
+    { "action": "shell", "resource": "gh pr *", "effect": "ask" },
+    { "action": "shell", "resource": "rm *", "effect": "deny" },
+    { "action": "shell", "resource": "sudo *", "effect": "deny" },
+    // Solo pregunta en lo sensible
+    { "action": "read", "resource": "*.env", "effect": "ask" },
+    { "action": "read", "resource": "*.env.*", "effect": "ask" },
+    { "action": "read", "resource": "*.env.example", "effect": "allow" },
+    { "action": "external_directory", "resource": "*", "effect": "ask" }
+  ],
+  "agents": {
+    "plan": {
+      "model": "openrouter/moonshotai/kimi-k3.1-pro",
+      // Las reglas globales se añaden después de las del Plan integrado: se vuelve a bloquear la edición
+      "permissions": [
+        { "action": "edit", "resource": "*", "effect": "deny" },
+        { "action": "edit", "resource": "~/.opencode/plan/*", "effect": "allow" }
+      ]
+    },
+    "title": { "model": "openrouter/deepseek/deepseek-v4.1-flash-1017" },
+    "summary": { "model": "openrouter/deepseek/deepseek-v4.1-flash-1017" }
+  }
+}
